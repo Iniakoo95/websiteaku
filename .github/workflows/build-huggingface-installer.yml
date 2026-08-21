@@ -1,0 +1,67 @@
+name: Build Hugging Face Installer
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-huggingface-installer.yml'
+      - 'installer/**'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create installer package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path installer\dist | Out-Null
+          @'
+          @echo off
+          setlocal
+          title Hugging Face CLI Installer
+          echo.
+          echo ========================================
+          echo      Hugging Face CLI Installer
+          echo ========================================
+          echo.
+          echo Installing the official Hugging Face CLI...
+          echo.
+          powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://hf.co/cli/install.ps1 | iex"
+          if errorlevel 1 (
+            echo.
+            echo Installation failed.
+            pause
+            exit /b 1
+          )
+          echo.
+          echo Installation completed.
+          echo Close and reopen PowerShell before using the hf command.
+          echo.
+          pause
+          endlocal
+          '@ | Set-Content -Encoding ascii installer\dist\Install-HuggingFace.bat
+
+          @'
+          # Hugging Face CLI Windows Installer
+          #
+          # Run Install-HuggingFace.bat to install the official hf CLI.
+          # The installer downloads the current official installer from hf.co.
+          '@ | Set-Content -Encoding utf8 installer\dist\README.txt
+
+      - name: Create ZIP installer package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path installer\dist\* -DestinationPath HuggingFace-Installer.zip -Force
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HuggingFace-Installer
+          path: HuggingFace-Installer.zip
+          if-no-files-found: error

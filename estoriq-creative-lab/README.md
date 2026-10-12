@@ -1,54 +1,28 @@
-# Estoriq Creative Lab — Prototype v0.1
+# Estoriq Creative Lab — Website Prototype V0.2
 
-A **Vite + React** creative studio website prototype intended for **owner QC only**. Do not deploy to the production domain or merge a release without explicit approval.
+**Owner QC build only. Not approved for public production release.**
 
-## Pages/sections
+A Vite + React responsive prototype for Estoriq Creative Lab, focused on studio lead generation and clear professional attribution.
 
-- Premium landing hero and creative studio positioning
-- Curated work grid with **Studio / Director’s Archive / Originals** filters
-- Accessible project-detail modal
-- Services and expertise section
-- LANGKATERA originals teaser (clearly identified as an *abstract concept*)
-- About/studio philosophy and contact via known Behance profile
-- Mobile navigation and responsive layouts
+## What changed since V0.1
 
-## Run locally
+- Rewritten information architecture: hero → case-study-first work → services → studio → director archive → originals → enquiry.
+- Three individual interactive case-study **slots** rather than studio/archive/IP category cards.
+- Stronger direct CGI positioning and primary calls to action.
+- Explicit credits distinction: Director's Archive is not studio-commissioned work.
+- Mobile-first QA features, keyboard Escape in project dialogs, accessible labels, reduced-motion support.
+- Contact uses existing verified Behance address until company email / enquiry path approved.
+- Artwork and project information are **concept placeholders**, not real/approved client work.
 
-Use Node 22.12+ or Node 20.19+.
+## QC & build
 
-```bash
-npm install
-npm run dev
-```
+Run `npm install`, `npm run dev`, `npm run build`, then `npm run qc:html` to create self-contained `review-preview.html` for checking via hosted HTML preview. Never deploy / merge into main without owner approval.
 
-For production-style build testing:
+## Release blockers
 
-```bash
-npm run build
-npm run preview
-```
-
-For an offline, portable **single-file QC preview**, after building run:
-
-```bash
-npm run qc:html
-```
-
-This creates `review-preview.html` with inlined compiled CSS/JS. It is for local review only. It is not a public deployment.
-
-## Creative direction
-
-Editorial, minimal, dark-chrome visual system with warm copper accent and intentionally art-directed original SVG concept imagery. **No actual client work or client images are included yet.**
-
-## Release blockers — QC required
-
-1. Approve brand logo, typography, content copy, visual direction.
-2. Supply/approve portfolio images, video and project descriptions, especially client permissions.
-3. Distinguish Studio works from the director’s personal archive and verify all credits.
-4. Approve contact email, enquiry workflow and final domain.
-5. Complete accessibility, SEO, privacy/legal and production cross-device tests.
-6. Explicit owner approval before hosting/deployment/production release.
-
-## Repository workflow
-
-Create an isolated feature branch and draft pull request. Do **not** modify `main` during QC. A production build should only be deployed after sign-off.
+1. Owner approves page layout, brand typography, palette and microcopy.
+2. Owner provides/approves actual commercial project visuals and case studies, final credits, permissions.
+3. Director's Archive correctly credits individual role and employer.
+4. Business email/contact method approved.
+5. Accessibility, link, speed, mobile/desktop and SEO QA.
+6. Production deployment requires explicit approval.

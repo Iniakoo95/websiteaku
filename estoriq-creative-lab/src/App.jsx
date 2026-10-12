@@ -1,222 +1,172 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-const WORK = [
+const PORTFOLIO = [
   {
-    id: 'studio', number: '01', category: 'STUDIO WORK', categoryLabel: 'Studio', kind: 'product',
-    title: 'Commercial CGI', subtitle: 'Objects. Atmosphere. Impact.',
-    description: 'A dedicated space for Estoriq Creative Lab product animation, 3D visualisation and motion work. Real project footage, approved client names and final credits will replace this concept visual after QC.',
-    tags: ['3D Visualisation', 'Product Motion', 'CGI'], status: 'Concept visual — content pending approval'
+    id: 'product-imagery', index: '01', eyebrow: 'PRODUCT VISUALISATION', title: 'Objects with presence.',
+    type: 'Commercial CGI / Visualisation', style: 'bottles', size: 'featured',
+    intro: 'Product imagery designed around form, texture and light.',
+    role: '3D imagery · Look development · Lighting',
+    status: 'Illustrative layout — final project and client approval pending',
+    note: 'This is a design placeholder, not a published client case study. Approved commercial work will replace the imagery, description and credits.'
   },
   {
-    id: 'archive', number: '02', category: 'DIRECTOR’S ARCHIVE', categoryLabel: 'Archive', kind: 'archive',
-    title: 'Creative Direction', subtitle: 'Selected work. Personal credits.',
-    description: 'A separate archive for creative work completed through previous or current professional roles. This section explicitly separates the director’s individual contributions from projects contracted by Estoriq Creative Lab.',
-    tags: ['Art Direction', '3D & Motion', 'Personal Archive'], status: 'Archive selection pending approval'
+    id: 'motion-design', index: '02', eyebrow: '3D PRODUCT ANIMATION', title: 'Made to move.',
+    type: 'Product Animation / Motion', style: 'motion',
+    intro: 'Product storytelling through deliberate movement and timing.',
+    role: 'Animation · Art direction · Rendering',
+    status: 'Illustrative layout — footage pending approval',
+    note: 'This slot will show a real, approved product animation with a clear description of the studio’s role.'
   },
   {
-    id: 'originals', number: '03', category: 'ORIGINALS', categoryLabel: 'Originals', kind: 'originals',
-    title: 'LANGKATERA', subtitle: 'An original world in the making.',
-    description: 'LANGKATERA is a developing original fantasy universe rooted in Nusantara-inspired visual storytelling. All visuals in this first prototype are abstract, provisional design studies — not approved character or film artwork.',
-    tags: ['Original IP', 'Worldbuilding', 'Visual Development'], status: 'Original IP — in development'
+    id: 'campaign-visuals', index: '03', eyebrow: 'CAMPAIGN VISUALS', title: 'Every detail matters.',
+    type: 'Creative CGI / Still Images', style: 'sculpture',
+    intro: 'Distinctive visual treatments for commercial ideas.',
+    role: 'CGI · Compositing · Creative exploration',
+    status: 'Concept placeholder — project selection pending',
+    note: 'No real client artwork or implied performance claims are shown in this early review version.'
   }
 ]
 
-function Arrow({diagonal=false, size=20}) {
-  return diagonal
-    ? <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M5 19 19 5M6 5h13v13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    : <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M4 12h16m-7-7 7 7-7 7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+const SERVICES = [
+  { no: '01', title: 'Product CGI & Visualisation', description: 'Elevated stills, product mockups and campaign imagery built to make materials and details feel tangible.', tags: 'STILLS  /  LOOKDEV  /  LIGHTING' },
+  { no: '02', title: '3D Animation & Motion', description: 'Motion-led product stories — from an elegant reveal to a complete visual sequence.', tags: 'ANIMATION  /  STORYBOARD  /  RENDER' },
+  { no: '03', title: 'Creative Direction', description: 'A clear visual point of view from the first frame through the final delivery.', tags: 'CONCEPT  /  DESIGN  /  DIRECTION' }
+]
+
+function IconArrow({ size = 18, diagonal = false }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d={diagonal ? 'M5 19 19 5M7 5h12v12' : 'M4 12h16m-7-7 7 7-7 7'} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+}
+function IconCross() { return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.8"/></svg> }
+
+function ArtFrame({ kind = 'bottles', id = 'art', text = 'ARTWORK / PENDING APPROVAL' }) {
+  const g = `g-${id}`
+  const isProduct = kind === 'bottles' || kind === 'hero'
+  return <div className={`art-frame visual-${kind}`}>
+    <svg className="artwork" viewBox="0 0 900 700" role="img" aria-label={`Abstract ${kind} visual placeholder, not real client artwork`} preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id={`${g}-bg`} x1="0" y1="0" x2="1" y2="1"><stop stopColor={kind === 'original' ? '#333435' : '#b8b8b4'}/><stop offset=".5" stopColor={kind === 'original' ? '#1a1b1e' : '#787d7e'}/><stop offset="1" stopColor="#303335"/></linearGradient>
+        <linearGradient id={`${g}-metal`} x1="0" y1="0" x2="1" y2=".25"><stop stopColor="#34393a"/><stop offset=".14" stopColor="#e8eae5"/><stop offset=".29" stopColor="#697173"/><stop offset=".45" stopColor="#d5d7d1"/><stop offset=".64" stopColor="#4e5659"/><stop offset=".82" stopColor="#e7e6df"/><stop offset="1" stopColor="#464a4b"/></linearGradient>
+        <linearGradient id={`${g}-glass`} x1="0" x2="1"><stop stopColor="#2f3435"/><stop offset=".25" stopColor="#b4babc" stopOpacity=".9"/><stop offset=".6" stopColor="#53595d"/><stop offset=".83" stopColor="#c0c7c6"/><stop offset="1" stopColor="#303334"/></linearGradient>
+        <radialGradient id={`${g}-light`}><stop stopColor="#f7f4e7" stopOpacity=".45"/><stop offset="1" stopColor="#f7f4e7" stopOpacity="0"/></radialGradient>
+        <pattern id={`${g}-grid`} patternUnits="userSpaceOnUse" width="90" height="90"><path d="M90 0H0V90" fill="none" stroke="#fff" strokeOpacity=".12" strokeWidth="1"/></pattern>
+        <filter id={`${g}-blur`}><feGaussianBlur stdDeviation="22"/></filter>
+      </defs>
+      <rect width="900" height="700" fill={`url(#${g}-bg)`}/><rect width="900" height="700" fill={`url(#${g}-grid)`}/><circle cx="460" cy="340" r="380" fill={`url(#${g}-light)`}/>
+      {isProduct && <g>
+        <ellipse cx="466" cy="600" rx="330" ry="45" fill="#0d1112" opacity=".5" filter={`url(#${g}-blur)`}/>
+        <g transform="translate(190 90) rotate(-9 120 300)"><rect x="16" y="80" width="232" height="447" rx="61" fill={`url(#${g}-glass)`}/><ellipse cx="132" cy="82" rx="108" ry="28" fill="#dde0dc" stroke="#575d5e" strokeWidth="5"/><rect x="24" y="253" width="216" height="155" fill="#4e5456" opacity=".94"/><path d="M35 264h196M35 392h196" stroke="#e1e5e3" strokeOpacity=".6"/><text x="132" y="327" textAnchor="middle" fontSize="21" letterSpacing="8" fill="#ecece6" fontWeight="700">STUDY</text><text x="132" y="365" textAnchor="middle" fontSize="14" letterSpacing="6" fill="#d9dad4">NO. 01</text></g>
+        <g transform="translate(455 50) rotate(12 120 300)"><rect x="16" y="80" width="232" height="447" rx="61" fill={`url(#${g}-metal)`}/><ellipse cx="132" cy="81" rx="109" ry="29" fill="#d4d7d3" stroke="#666d6d" strokeWidth="5"/><rect x="25" y="251" width="214" height="159" fill="#d1d1cb" opacity=".82"/><text x="132" y="318" textAnchor="middle" fontSize="20" letterSpacing="7" fill="#242627" fontWeight="700">FORM</text><path d="M81 337h102" stroke="#242627"/><text x="132" y="371" textAnchor="middle" fontSize="13" letterSpacing="6" fill="#333637">NO. 02</text></g>
+        <path d="M64 614h771" stroke="#eee" strokeOpacity=".5"/>
+      </g>}
+      {kind === 'motion' && <g>
+        <ellipse cx="460" cy="588" rx="275" ry="39" fill="#111" opacity=".45" filter={`url(#${g}-blur)`}/>
+        <g transform="translate(437 347)"><g transform="rotate(-26)"><rect x="-123" y="-235" width="246" height="470" rx="62" fill={`url(#${g}-metal)`}/><ellipse cx="0" cy="-234" rx="113" ry="30" fill="#d5d6d1"/><rect x="-114" y="-23" width="228" height="135" fill="#34383a"/><path d="M-50 25h100" stroke="#d5d6d1" strokeWidth="2"/><text y="12" fontSize="15" textAnchor="middle" fill="#f0eee9" letterSpacing="5">MOTION</text><text y="70" fontSize="38" textAnchor="middle" fill="#f2f1ec" letterSpacing="3">02</text></g></g>
+        <ellipse cx="455" cy="334" rx="343" ry="165" transform="rotate(-24 455 334)" stroke="#e5e4dc" strokeOpacity=".55" strokeWidth="2" strokeDasharray="9 13" fill="none"/><path d="M87 360l-21-8 7 23M808 239l20 17-1-27" stroke="#e4e8e7" strokeWidth="3" fill="none"/>
+      </g>}
+      {kind === 'sculpture' && <g>
+        <ellipse cx="456" cy="605" rx="290" ry="36" fill="#151616" opacity=".4" filter={`url(#${g}-blur)`}/>
+        <g transform="translate(166 62)"><path d="M119 444V129L296 26 484 135v308L301 553Z" fill="#252829"/><path d="M119 129 296 26v335L119 444Z" fill={`url(#${g}-metal)`}/><path d="M296 26 484 135v308L301 553Z" fill="#aeb4b4"/><path d="M296 361 484 135v308L301 553Z" fill="#3f4547"/><path d="M119 129 296 26l188 109-188 226Z" fill="#e6e7e2"/><path d="M151 142 292 64l148 83-147 177Z" fill="#393f41"/><path d="M190 176 289 115v135Z" fill="#aaaead"/></g><circle cx="740" cy="175" r="55" fill="none" stroke="#f1eee7" strokeOpacity=".38"/>
+      </g>}
+      {kind === 'original' && <g>
+        <circle cx="452" cy="350" r="254" stroke="#ddd5c8" strokeOpacity=".35" fill="none"/><circle cx="452" cy="350" r="210" stroke="#ddd5c8" strokeOpacity=".25" fill="none"/><circle cx="452" cy="350" r="303" stroke="#ddd5c8" strokeOpacity=".17" strokeDasharray="6 17" fill="none"/>
+        <path d="M454 75 510 263 576 338 502 378 522 536 454 628 385 536 404 378 331 338 395 263Z" fill={`url(#${g}-metal)`}/><path d="M452 125v455M385 341h138" stroke="#242729" strokeWidth="12" opacity=".52"/><path d="M240 528 452 648 665 528" stroke="#eeeadb" strokeOpacity=".25" fill="none"/><circle cx="452" cy="351" r="13" fill="#f3ede0"/>
+      </g>}
+      <rect x="25" y="25" width="850" height="650" stroke="#fff" strokeOpacity=".18" fill="none"/>
+      <path d="M25 90V25h65M810 675h65v-65" fill="none" stroke="#f4eee4" strokeWidth="2" opacity=".7"/>
+    </svg>
+    <div className="placeholder-stamp">{text}</div>
+  </div>
 }
 
-function Art({kind='hero', compact=false}) {
-  const uid = `art-${kind}-${compact ? 'small' : 'large'}`
-  return <svg className={`art-svg art-${kind}`} viewBox="0 0 900 710" role="img" aria-label={kind === 'product' ? 'Abstract metallic product containers concept artwork' : kind === 'archive' ? 'Abstract sculptural architectural concept artwork' : kind === 'originals' ? 'Abstract fantasy emblem concept artwork' : 'Abstract cinematic chrome sculpture'}>
-    <defs>
-      <radialGradient id={`${uid}-bg`} cx="50%" cy="40%" r="74%"><stop stopColor={kind === 'originals' ? '#603f3b' : kind === 'product' ? '#e9ddd0' : '#353536'}/><stop offset="0.54" stopColor={kind === 'originals' ? '#2b2126' : kind === 'product' ? '#c2ad9e' : '#171819'}/><stop offset="1" stopColor={kind === 'product' ? '#8d7e76' : '#0b0c0e'}/></radialGradient>
-      <linearGradient id={`${uid}-chrome`} x1="0" y1="0" x2="1" y2="1"><stop stopColor="#39373a"/><stop offset=".12" stopColor="#fafaf5"/><stop offset=".24" stopColor="#81858b"/><stop offset=".38" stopColor="#17191b"/><stop offset=".56" stopColor="#e5e7e3"/><stop offset=".69" stopColor="#5e6065"/><stop offset=".84" stopColor="#ffffff"/><stop offset="1" stopColor="#23252b"/></linearGradient>
-      <linearGradient id={`${uid}-metal`} x1="0" y1="0" x2="1" y2=".8"><stop stopColor="#321f1c"/><stop offset=".14" stopColor="#f8ca9e"/><stop offset=".32" stopColor="#8e4b39"/><stop offset=".48" stopColor="#ffe6c7"/><stop offset=".69" stopColor="#6c3c32"/><stop offset=".85" stopColor="#c78360"/><stop offset="1" stopColor="#271d1f"/></linearGradient>
-      <linearGradient id={`${uid}-can`} x1="0" x2="1"><stop stopColor="#282523"/><stop offset=".12" stopColor="#babab6"/><stop offset=".3" stopColor="#fcf8ed"/><stop offset=".49" stopColor="#85817d"/><stop offset=".69" stopColor="#f8ebe0"/><stop offset=".85" stopColor="#77706b"/><stop offset="1" stopColor="#201d1f"/></linearGradient>
-      <radialGradient id={`${uid}-glow`}><stop stopColor="#fcbd9e" stopOpacity=".65"/><stop offset="1" stopColor="#fcbd9e" stopOpacity="0"/></radialGradient>
-      <filter id={`${uid}-shadow`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="27"/></filter>
-      <pattern id={`${uid}-grid`} patternUnits="userSpaceOnUse" width="70" height="70"><path d="M70 0H0V70" fill="none" stroke="#fff" strokeOpacity=".07" strokeWidth="1"/></pattern>
-    </defs>
-    <rect width="900" height="710" fill={`url(#${uid}-bg)`}/>
-    <rect width="900" height="710" fill={`url(#${uid}-grid)`}/>
-    {kind === 'hero' && <g>
-      <ellipse cx="470" cy="627" rx="266" ry="49" fill="#000" opacity=".5" filter={`url(#${uid}-shadow)`}/>
-      <circle cx="463" cy="329" r="295" fill={`url(#${uid}-glow)`} opacity=".35"/>
-      <g className="orbit-a">
-        <ellipse cx="455" cy="337" rx="264" ry="113" transform="rotate(-41 455 337)" fill="none" stroke="#08090b" strokeWidth="106" opacity=".6"/>
-        <ellipse cx="455" cy="326" rx="264" ry="113" transform="rotate(-41 455 326)" fill="none" stroke={`url(#${uid}-chrome)`} strokeWidth="92"/>
-        <ellipse cx="455" cy="322" rx="266" ry="115" transform="rotate(-41 455 322)" fill="none" stroke="#fff" strokeOpacity=".33" strokeWidth="3"/>
-      </g>
-      <g className="orbit-b">
-        <ellipse cx="455" cy="340" rx="250" ry="103" transform="rotate(44 455 340)" fill="none" stroke="#0b0c0c" strokeWidth="94" opacity=".5"/>
-        <ellipse cx="455" cy="330" rx="250" ry="103" transform="rotate(44 455 330)" fill="none" stroke={`url(#${uid}-metal)`} strokeWidth="80"/>
-        <ellipse cx="455" cy="326" rx="254" ry="106" transform="rotate(44 455 326)" fill="none" stroke="#f8ded5" strokeOpacity=".4" strokeWidth="3"/>
-      </g>
-      <circle cx="455" cy="329" r="61" fill="#151519" stroke="#f8f4e7" strokeOpacity=".42" strokeWidth="3"/>
-      <circle cx="455" cy="329" r="35" fill={`url(#${uid}-chrome)`}/>
-      <path d="M142 162h99m-50-50v99 M725 502h80m-40-40v80" stroke="#fff" strokeOpacity=".24" strokeWidth="1.2"/>
-    </g>}
-    {kind === 'product' && <g>
-      <ellipse cx="455" cy="631" rx="310" ry="38" fill="#342b28" opacity=".38" filter={`url(#${uid}-shadow)`}/>
-      <g transform="translate(115 65) rotate(-15 240 290)">
-        <rect x="176" y="127" width="204" height="408" rx="43" fill={`url(#${uid}-can)`}/>
-        <ellipse cx="278" cy="128" rx="102" ry="24" fill="#ded7c9" stroke="#625b56" strokeWidth="6"/>
-        <rect x="182" y="166" width="190" height="25" fill="#ded8ce" opacity=".4"/>
-        <rect x="186" y="318" width="184" height="120" fill="#e4ad8a" opacity=".89"/>
-        <text x="278" y="361" fill="#3a2925" fontSize="13" fontWeight="700" textAnchor="middle" letterSpacing="4">FORM STUDY</text>
-        <text x="278" y="399" fill="#372824" fontSize="39" fontWeight="800" textAnchor="middle">01</text>
-        <ellipse cx="278" cy="534" rx="98" ry="15" fill="#48413b" opacity=".7"/>
-      </g>
-      <g transform="translate(348 106) rotate(14 240 290)">
-        <rect x="176" y="127" width="204" height="408" rx="43" fill={`url(#${uid}-can)`}/>
-        <ellipse cx="278" cy="128" rx="102" ry="24" fill="#e9e6dc" stroke="#625b56" strokeWidth="6"/>
-        <rect x="181" y="166" width="195" height="30" fill="#fff" opacity=".32"/>
-        <rect x="184" y="315" width="187" height="123" fill="#312c2c" opacity=".9"/>
-        <text x="278" y="362" fill="#f0e5dc" fontSize="13" fontWeight="700" textAnchor="middle" letterSpacing="4">MOTION TEST</text>
-        <text x="278" y="402" fill="#f5ede5" fontSize="39" fontWeight="800" textAnchor="middle">02</text>
-        <ellipse cx="278" cy="534" rx="98" ry="15" fill="#48413b" opacity=".7"/>
-      </g>
-      <path d="M50 570h800" stroke="#fff" opacity=".16" strokeWidth="2"/>
-    </g>}
-    {kind === 'archive' && <g>
-      <ellipse cx="477" cy="613" rx="274" ry="58" fill="#000" opacity=".5" filter={`url(#${uid}-shadow)`}/>
-      <g transform="translate(205 98)">
-        <path d="M93 415V113L283 9l182 100v308L282 529Z" fill="#242526"/>
-        <path d="M93 113 283 9v302L93 415Z" fill={`url(#${uid}-chrome)`}/>
-        <path d="M283 9 465 109v308L283 529Z" fill="#bcb9b2"/>
-        <path d="M283 311 465 109v308L283 529Z" fill="#44484c"/>
-        <path d="M93 113 283 9l182 100-182 202Z" fill="#e7e3db" opacity=".92"/>
-        <path d="m116 131 165-90 147 75-147 166Z" fill="#383a3c"/>
-        <path d="M162 172 280 102v119Z" fill="#eaa686"/>
-      </g>
-      <circle cx="671" cy="146" r="55" fill="none" stroke="#f5e8d7" strokeOpacity=".25" strokeWidth="1"/>
-      <path d="M66 593h768M65 119h117" stroke="#fff" strokeOpacity=".3"/>
-    </g>}
-    {kind === 'originals' && <g>
-      <circle cx="455" cy="330" r="225" fill="none" stroke="#d3a579" strokeOpacity=".4" strokeWidth="3"/>
-      <circle cx="455" cy="330" r="182" fill="none" stroke="#f4d5a7" strokeOpacity=".22" strokeWidth="2"/>
-      <circle cx="455" cy="330" r="280" fill="none" stroke="#d3a579" strokeOpacity=".12" strokeWidth="1" strokeDasharray="6 12"/>
-      <path d="M455 64 498 242 540 287l-40 28 15 187-60 112-60-112 15-187-40-28 42-45Z" fill={`url(#${uid}-metal)`} stroke="#f7d5a5" strokeOpacity=".55" strokeWidth="2"/>
-      <path d="M455 108v430M420 295h70M423 499h65" stroke="#20151a" strokeWidth="13" opacity=".6"/>
-      <path d="M303 242c-35 41-49 86-41 145M607 242c35 41 49 86 41 145" fill="none" stroke="#e4b48e" strokeOpacity=".4" strokeWidth="8"/>
-      <path d="M236 513 455 645 674 513" stroke="#d3a579" strokeOpacity=".24" fill="none"/>
-      <circle cx="455" cy="330" r="10" fill="#fff6df"/>
-      <path d="M455 19v58m0 518v58M146 330h75m468 0h75" stroke="#e0ab7d" strokeOpacity=".3"/>
-    </g>}
-    <rect x="18" y="18" width="864" height="674" fill="none" stroke="#fff" strokeOpacity=".13"/>
-  </svg>
-}
-
-function App() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [filter, setFilter] = useState('all')
-  const [selected, setSelected] = useState(null)
-  const [copied, setCopied] = useState(false)
-  const visibleWork = filter === 'all' ? WORK : WORK.filter(x => x.id === filter)
-
+function DetailDialog({ project, close }) {
+  const closeRef = useRef(null)
   useEffect(() => {
-    function closeOnEscape(e) { if (e.key === 'Escape') { setSelected(null); setMenuOpen(false) } }
-    window.addEventListener('keydown', closeOnEscape)
-    document.body.style.overflow = selected || menuOpen ? 'hidden' : ''
-    return () => { window.removeEventListener('keydown', closeOnEscape); document.body.style.overflow = '' }
-  }, [selected, menuOpen])
+    const previous = document.activeElement
+    closeRef.current?.focus()
+    const key = (e) => { if (e.key === 'Escape') close() }
+    document.addEventListener('keydown', key)
+    document.body.classList.add('modal-open')
+    return () => { document.removeEventListener('keydown', key); document.body.classList.remove('modal-open'); previous?.focus?.() }
+  }, [close])
+  return <div className="dialog-overlay" onMouseDown={e => { if (e.target === e.currentTarget) close() }}>
+    <section className="dialog" role="dialog" aria-modal="true" aria-labelledby="case-study-title">
+      <button ref={closeRef} className="dialog-close" onClick={close} aria-label="Close project preview"><IconCross/></button>
+      <div className="dialog-image"><ArtFrame kind={project.style} id={`dialog-${project.id}`}/></div>
+      <div className="dialog-body"><div className="overline">CASE STUDY PREVIEW / {project.index}</div><h2 id="case-study-title">{project.title}</h2><p className="dialog-intro">{project.intro}</p><div className="detail-rule"/><dl><div><dt>TYPE</dt><dd>{project.type}</dd></div><div><dt>PRODUCTION SCOPE</dt><dd>{project.role}</dd></div><div><dt>PUBLICATION STATUS</dt><dd>{project.status}</dd></div></dl><p className="disclaimer">{project.note}</p></div>
+    </section>
+  </div>
+}
 
-  function navigateToWork(id) {
-    setFilter(id)
-    setMenuOpen(false)
-  }
-
-  async function copyPortfolioLink() {
+export default function App() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [selected, setSelected] = useState(null)
+  const [copySuccess, setCopySuccess] = useState(false)
+  useEffect(() => {
+    document.body.classList.toggle('nav-open', menuOpen)
+    return () => document.body.classList.remove('nav-open')
+  }, [menuOpen])
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  const closeMenu = () => setMenuOpen(false)
+  async function copyBehance() {
     try {
       await navigator.clipboard.writeText('https://www.behance.net/nazmibayan')
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1800)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2200)
     } catch { window.open('https://www.behance.net/nazmibayan', '_blank', 'noopener,noreferrer') }
   }
 
   return <div className="site" id="top">
-    <div className="development-bar"><span className="development-dot"/>PRIVATE REVIEW BUILD <span className="development-sep">/</span> CONTENT AND ARTWORK SUBJECT TO APPROVAL</div>
-    <header className="site-header">
-      <a className="brand" href="#top" aria-label="Estoriq Creative Lab, back to top" onClick={() => setMenuOpen(false)}>
-        <span className="brand-symbol">E<span className="brand-symbol-dot"/></span>
-        <span className="brand-type">ESTORIQ<span>CREATIVE LAB</span></span>
-      </a>
-      <nav className="desktop-nav" aria-label="Main navigation">
-        <a href="#work" onClick={() => navigateToWork('all')}>Work</a>
-        <a href="#work" onClick={() => navigateToWork('archive')}>Director’s Archive</a>
-        <a href="#originals" onClick={() => setMenuOpen(false)}>Originals</a>
-        <a href="#about" onClick={() => setMenuOpen(false)}>Studio</a>
-      </nav>
-      <a className="header-contact" href="#contact">LET’S TALK <Arrow diagonal size={16}/></a>
-      <button className="mobile-menu-button" type="button" aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(x => !x)}><span/><span/></button>
+    <div className="qc-ribbon"><span className="qc-dot"/> ESTORIQ WEBSITE / V0.2 <span className="qc-ribbon-sep">·</span> OWNER QC BUILD — NOT PUBLISHED</div>
+    <header className="header">
+      <a className="brand" href="#top" onClick={closeMenu} aria-label="Estoriq Creative Lab home"><span className="brand-mark">e<span>.</span></span><span className="brand-lockup">ESTORIQ<small>CREATIVE LAB</small></span></a>
+      <nav aria-label="Primary navigation" className="desktop-nav"><a href="#work">Work</a><a href="#services">Services</a><a href="#studio">Studio</a><a href="#archive">Director's Archive</a><a href="#originals">Originals</a></nav>
+      <a href="#contact" className="header-cta">START A PROJECT <IconArrow diagonal size={16}/></a>
+      <button className={`menu-toggle ${menuOpen ? 'is-open' : ''}`} aria-expanded={menuOpen} aria-controls="mobile-nav" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} onClick={() => setMenuOpen(x => !x)}><span/><span/></button>
     </header>
-    {menuOpen && <nav className="mobile-nav" aria-label="Mobile navigation">
-      <a href="#work" onClick={() => navigateToWork('all')}>Work <Arrow diagonal/></a>
-      <a href="#work" onClick={() => navigateToWork('archive')}>Director’s Archive <Arrow diagonal/></a>
-      <a href="#originals" onClick={() => setMenuOpen(false)}>Originals <Arrow diagonal/></a>
-      <a href="#about" onClick={() => setMenuOpen(false)}>Studio <Arrow diagonal/></a>
-      <a href="#contact" onClick={() => setMenuOpen(false)}>Contact <Arrow diagonal/></a>
-    </nav>}
+    <nav id="mobile-nav" className={`mobile-nav ${menuOpen ? 'visible' : ''}`} aria-label="Mobile navigation" inert={!menuOpen}><a href="#work" onClick={closeMenu}>Work <IconArrow diagonal/></a><a href="#services" onClick={closeMenu}>Services <IconArrow diagonal/></a><a href="#studio" onClick={closeMenu}>Studio <IconArrow diagonal/></a><a href="#archive" onClick={closeMenu}>Director's Archive <IconArrow diagonal/></a><a href="#originals" onClick={closeMenu}>Originals <IconArrow diagonal/></a><a href="#contact" onClick={closeMenu}>Start a Project <IconArrow diagonal/></a></nav>
 
     <main>
       <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <div className="overline"><span className="overline-rule"/> INDEPENDENT CGI & MOTION STUDIO <span className="overline-rule"/> MALAYSIA</div>
-          <h1 id="hero-title">Imagination,<br/><em>in motion.</em></h1>
-          <p>We create expressive visuals at the intersection of design, technology and storytelling.</p>
-          <div className="hero-actions">
-            <a className="button button-light" href="#work">Explore our work <Arrow diagonal size={19}/></a>
-            <a className="text-link" href="#about">Discover the studio <span>↗</span></a>
-          </div>
-          <div className="hero-bottom"><span>01 — 04</span><span>SCROLL TO EXPLORE ↓</span></div>
+        <div className="hero-left"><p className="overline hero-eyebrow"><span className="eyebrow-line"/> INDEPENDENT CGI & MOTION STUDIO <span className="hero-location">MALAYSIA</span></p>
+          <h1 id="hero-title">Products,<br/><span>reimagined</span><br/>in motion<span className="end-dot">.</span></h1>
+          <p className="hero-description">Commercial CGI, 3D animation and creative direction for brands with something to say.</p>
+          <div className="hero-links"><a className="btn btn-dark" href="#work">EXPLORE OUR WORK <IconArrow diagonal size={17}/></a><a className="subtle-cta" href="#contact">Start a project <IconArrow diagonal size={16}/></a></div>
+          <div className="hero-index"><span>EST. IN MALAYSIA / INDEPENDENT BY DESIGN</span><span>SCROLL TO EXPLORE ↓</span></div>
         </div>
-        <div className="hero-visual"><Art kind="hero"/><div className="hero-visual-label"><span>ESTORIQ / EXPERIMENT 001</span><span>FORM, LIGHT & MOVEMENT</span></div><span className="visual-mark visual-mark-left">+</span><span className="visual-mark visual-mark-right">+</span></div>
+        <div className="hero-right"><ArtFrame kind="hero" id="hero" text="FEATURED SHOWREEL / FOOTAGE PENDING APPROVAL"/><div className="hero-frame-top"><span>ESTORIQ / CGI STUDIES</span><span>V0.2</span></div><div className="hero-frame-bottom"><span>01 / A STUDY IN FORM</span><span>PREVIEW FRAME — NOT CLIENT WORK</span></div></div>
       </section>
 
-      <section className="manifesto section-wrap" id="about">
-        <div className="section-kicker"><span>01 / WHO WE ARE</span><span>STUDIO PHILOSOPHY</span></div>
-        <div className="manifesto-layout">
-          <h2>We make the<br/><span>ordinary</span><br/>extraordinary<span className="accent-period">.</span></h2>
-          <div className="manifesto-side"><div className="mini-asterisk">✳</div><p>Estoriq Creative Lab is an independent creative practice working across CGI, 3D animation and visual storytelling.</p><p>From a single product frame to an entirely imagined world, we obsess over the details that make people feel something.</p><a className="underlined-link" href="#contact">COLLABORATE WITH US <Arrow diagonal size={17}/></a></div>
-        </div>
-      </section>
-
-      <section className="work-section" id="work">
-        <div className="section-wrap">
-          <div className="section-kicker"><span>02 / THE WORK</span><span>CURATED SELECTION</span></div>
-          <div className="section-heading"><h2>Selected <em>work.</em></h2><p>A curated first look at our practice, professional archive and original storytelling worlds.</p></div>
-          <div className="filter-row" role="group" aria-label="Filter portfolio work">
-            {[['all','All projects'],['studio','Studio'],['archive','Director’s Archive'],['originals','Originals']].map(([id,label]) => <button key={id} type="button" className={`filter-button ${filter === id ? 'active' : ''}`} onClick={() => setFilter(id)} aria-pressed={filter === id}>{label}<span>{id === 'all' ? '03' : '01'}</span></button>)}
+      <section className="work-section" id="work" aria-labelledby="work-heading">
+        <div className="content-width"><div className="section-top"><span className="eyebrow-number">01 / SELECTED WORK</span><span>COMMERCIAL CGI & MOTION</span></div>
+          <div className="work-heading-row"><h2 id="work-heading">Work that<br/><em>speaks for itself.</em></h2><div className="section-intro"><p>A selection of visual stories shaped by craft, curiosity and attention to detail.</p><span className="small-note">Project slots are illustrative until client material is approved.</span></div></div>
+          <div className="projects">
+            {PORTFOLIO.map((project, i) => <article className={`project-card ${project.size === 'featured' ? 'project-featured' : ''}`} key={project.id}>
+              <button className="project-media" onClick={() => setSelected(project)} aria-label={`Preview project: ${project.title}`}>
+                <ArtFrame kind={project.style} id={project.id} text="CONCEPT FRAME / NOT APPROVED CLIENT ARTWORK"/>
+                <span className="project-media-top">{project.index} / {project.eyebrow}</span><span className="project-open"><IconArrow diagonal size={22}/></span>
+              </button>
+              <div className="project-info"><div><span className="project-type">{project.type}</span><h3>{project.title}</h3><p>{project.intro}</p></div><button onClick={() => setSelected(project)} className="project-details">PROJECT PREVIEW <IconArrow diagonal size={16}/></button></div>
+            </article>)}
           </div>
-          <div className={`work-grid ${visibleWork.length===1 ? 'single' : ''}`}>
-            {visibleWork.map((work, index) => <button className={`work-card work-card-${work.kind}`} key={work.id} type="button" onClick={() => setSelected(work)} aria-label={`Open ${work.title} project details`}>
-              <div className="work-cover"><Art kind={work.kind} compact/><div className="art-watermark">CONCEPT VISUAL <span>•</span> PROTOTYPE</div><span className="work-open"><Arrow diagonal size={24}/></span></div>
-              <div className="work-meta"><span>{work.category}</span><span>{work.number} / 03</span></div>
-              <div className="work-name"><h3>{work.title}</h3><Arrow diagonal size={21}/></div>
-              <p>{work.subtitle}</p>
-            </button>)}
-          </div>
-          <p className="content-caveat"><span>ⓘ</span> Prototype artwork is illustrative only. No client footage, agency credits or proprietary project files are published here.</p>
+          <div className="work-footnote"><span>↗</span><p>Actual client imagery, film footage and final credits will be included only after owner QC and permission checks.</p></div>
         </div>
       </section>
 
-      <section className="services section-wrap" id="services">
-        <div className="section-kicker"><span>03 / OUR EXPERTISE</span><span>WHAT WE DO</span></div>
-        <div className="services-layout"><div className="services-intro"><h2>Making ideas<br/><em>feel real.</em></h2><p>Creative thinking and production craft, working together from first idea to final frame.</p></div><div className="services-list">
-          {[['01','3D Product Visualisation','From materials and lighting to striking commercial imagery.'],['02','CGI & Motion Design','Design-led animation built around timing, rhythm and attention.'],['03','Creative Direction','Strong visual systems and clear storytelling across every frame.'],['04','Worldbuilding & Originals','Character, environment and universe development for original ideas.']].map(([n,title,desc]) => <div className="service-item" key={n}><span>{n}</span><div><h3>{title}</h3><p>{desc}</p></div><Arrow diagonal size={19}/></div>)}
-        </div></div>
-      </section>
+      <section className="services-section" id="services" aria-labelledby="services-heading"><div className="content-width"><div className="section-top"><span className="eyebrow-number">02 / EXPERTISE</span><span>WHAT WE DO</span></div><div className="services-heading-row"><h2 id="services-heading">From an idea<br/>to an <em>impact.</em></h2><p>Focused creative capabilities, connected from concept to final frame.</p></div><div className="service-grid">{SERVICES.map(s => <div className="service" key={s.no}><span className="service-index">{s.no}</span><div className="service-icon"><IconArrow diagonal size={23}/></div><h3>{s.title}</h3><p>{s.description}</p><span className="service-tags">{s.tags}</span></div>)}</div><div className="process"><span>OUR APPROACH</span><div><span>01 / DISCOVER</span><span className="process-arrow">→</span><span>02 / DEVELOP</span><span className="process-arrow">→</span><span>03 / DELIVER</span></div></div></div></section>
 
-      <section className="originals-section" id="originals"><div className="originals-image"><Art kind="originals"/><div className="image-note">ABSTRACT DESIGN STUDY / NOT FINAL IP ARTWORK</div></div><div className="originals-copy"><span className="originals-kicker">ESTORIQ ORIGINALS / 001</span><div className="originals-line"/><span className="eyebrow">A WORLD BEYOND THE KNOWN</span><h2>LANG<span>KA</span>TERA</h2><p>Where myth meets ambition. An original fantasy universe taking shape through the language of Nusantara-inspired storytelling.</p><div className="originals-status"><span className="status-pulse"/> IN DEVELOPMENT</div><button className="button button-outline" type="button" onClick={() => setSelected(WORK[2])}>Explore the concept <Arrow diagonal size={18}/></button></div></section>
+      <section className="studio-section" id="studio" aria-labelledby="studio-heading"><div className="content-width"><div className="section-top"><span className="eyebrow-number">03 / THE STUDIO</span><span>SMALL BY DESIGN. BOLD IN INTENTION.</span></div><div className="studio-grid"><div><p className="overline dark-overline">INDEPENDENT CREATIVE PRACTICE</p><h2 id="studio-heading">Crafting the<br/><span>unordinary.</span></h2></div><div className="studio-copy"><p>Estoriq Creative Lab is an independent creative studio focused on CGI, 3D animation and visual storytelling.</p><p>We approach every frame with a balance of intentional design, technical craft and curiosity — from a single product image to a larger visual world.</p><a href="#contact" className="text-action">LET'S COLLABORATE <IconArrow diagonal size={16}/></a></div></div></div></section>
 
-      <section className="contact-section section-wrap" id="contact"><div className="section-kicker"><span>04 / WHAT'S NEXT?</span><span>GET IN TOUCH</span></div><div className="contact-content"><div><span className="eyebrow">YOUR IDEA. OUR CURIOSITY.</span><h2>Let’s create<br/><em>something</em><br/>worth seeing<span>.</span></h2></div><div className="contact-side"><p>Have a product to bring to life, a story to tell, or an ambitious idea to explore?</p><a className="button button-dark" href="https://www.behance.net/nazmibayan" target="_blank" rel="noopener noreferrer">Connect on Behance <Arrow diagonal size={18}/></a><button className="copy-link" type="button" onClick={copyPortfolioLink}>{copied ? 'Portfolio link copied ✓' : 'Copy portfolio link ↗'}</button><span className="pending-label">Business email & enquiry form: pending QC approval.</span></div></div></section>
+      <section className="archive-section" id="archive" aria-labelledby="archive-heading"><div className="content-width"><div className="section-top"><span className="eyebrow-number">04 / DIRECTOR'S ARCHIVE</span><span>INDIVIDUAL WORK & CONTRIBUTIONS</span></div><div className="archive-layout"><div className="archive-intro"><h2 id="archive-heading">A body of work.<br/><em>Beyond the studio.</em></h2><p>Selected projects and creative contributions across professional roles. Every published piece will show individual responsibilities and appropriate attribution.</p><div className="archive-disclaimer"><strong>CREDIT CLARITY</strong><br/>Professional archive projects are individual credits, not Estoriq Creative Lab commissions.</div></div><div className="archive-slots"><div className="archive-slot"><div className="archive-placeholder"><span>ARCHIVE IMAGE / 01</span><span>+</span></div><div><h3>Selected project — pending approval</h3><p>Employer / production credit to be verified</p></div></div><div className="archive-slot"><div className="archive-placeholder archive-placeholder-second"><span>ARCHIVE IMAGE / 02</span><span>+</span></div><div><h3>Selected project — pending approval</h3><p>Individual role and attribution to be verified</p></div></div></div></div></div></section>
+
+      <section className="originals-section" id="originals" aria-labelledby="originals-heading"><div className="original-art"><ArtFrame kind="original" id="langkatera" text="ORIGINAL IP / CONCEPT ART PLACEHOLDER"/></div><div className="original-content"><div className="original-kicker">05 / ESTORIQ ORIGINALS</div><p className="original-subtag">AN ORIGINAL WORLD IN DEVELOPMENT</p><h2 id="originals-heading">LANG<span>KA</span>TERA</h2><p>Where myth meets ambition. A Nusantara-inspired fantasy universe in visual development.</p><span className="original-badge"><span/> ORIGINAL IP — IN DEVELOPMENT</span><a href="https://www.behance.net/nazmibayan" className="original-link" target="_blank" rel="noopener noreferrer">FOLLOW OUR CREATIVE WORK <IconArrow diagonal size={16}/></a></div></section>
+
+      <section className="contact-section" id="contact" aria-labelledby="contact-heading"><div className="content-width"><div className="section-top"><span className="eyebrow-number">06 / GET IN TOUCH</span><span>LET'S MAKE SOMETHING</span></div><div className="contact-grid"><div><h2 id="contact-heading">Have a project<br/><em>in mind?</em> <span>↗</span></h2></div><div className="contact-aside"><p>Tell us what you're creating. Let's talk about the next frame, the next story, or the next big idea.</p><a className="btn btn-dark" href="https://www.behance.net/nazmibayan" target="_blank" rel="noopener noreferrer">CONNECT VIA BEHANCE <IconArrow diagonal size={18}/></a><button className="copy-contact" onClick={copyBehance}>{copySuccess ? 'PORTFOLIO LINK COPIED ✓' : 'COPY PORTFOLIO LINK ↗'}</button><div className="contact-pending">Direct business email and enquiry form will be enabled once approved.</div></div></div></div></section>
     </main>
-    <footer className="footer"><div className="footer-top"><a className="footer-logo" href="#top">ESTORIQ<span>®</span></a><span>CREATIVE LAB <br/> INDEPENDENT BY DESIGN.</span><a href="#top">BACK TO TOP ↑</a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} ESTORIQ CREATIVE LAB</span><span>PROTOTYPE V0.1 — NOT RELEASED</span><span>BUILT TO EXPLORE WHAT’S POSSIBLE.</span></div></footer>
-
-    {selected && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setSelected(null) }} role="presentation"><section className="project-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button className="modal-close" type="button" aria-label="Close project details" onClick={() => setSelected(null)}>CLOSE ✕</button><div className="modal-image"><Art kind={selected.kind} compact/></div><div className="modal-text"><span className="eyebrow">{selected.category} / PROTOTYPE</span><h2 id="modal-title">{selected.title}</h2><h3>{selected.subtitle}</h3><p>{selected.description}</p><div className="modal-tags">{selected.tags.map(t => <span key={t}>{t}</span>)}</div><div className="modal-status">ⓘ {selected.status}</div></div></section></div>}
+    <footer className="footer"><div className="content-width"><div className="footer-head"><a href="#top" className="footer-wordmark">ESTORIQ<span>®</span></a><div className="footer-column"><b>EXPLORE</b><a href="#work">Work</a><a href="#services">Services</a><a href="#studio">Studio</a><a href="#archive">Director's Archive</a><a href="#originals">Originals</a></div><div className="footer-column"><b>CONNECT</b><a href="https://www.behance.net/nazmibayan" target="_blank" rel="noopener noreferrer">Behance ↗</a><a href="#contact">Start a project ↗</a><span>Malaysia</span></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} ESTORIQ CREATIVE LAB</span><span>PROTOTYPE V0.2 / OWNER REVIEW ONLY</span><a href="#top">BACK TO TOP ↑</a></div></div></footer>
+    {selected && <DetailDialog project={selected} close={() => setSelected(null)}/>}
   </div>
 }
-
-export default App

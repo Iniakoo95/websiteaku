@@ -1,0 +1,33 @@
+name: Estoriq prototype QC build
+on:
+  push:
+    branches:
+      - prototype/estoriq-creative-lab-v01
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: estoriq-creative-lab
+      - name: Compile production bundle (test only)
+        run: npm run build
+        working-directory: estoriq-creative-lab
+      - name: Prepare self-contained offline QC file
+        run: npm run qc:html
+        working-directory: estoriq-creative-lab
+      - name: Upload QC preview and build (not deployed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: estoriq-prototype-qc
+          path: |
+            estoriq-creative-lab/review-preview.html
+            estoriq-creative-lab/dist
+          if-no-files-found: error

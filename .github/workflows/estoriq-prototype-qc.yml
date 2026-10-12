@@ -3,9 +3,13 @@ on:
   push:
     branches:
       - prototype/estoriq-creative-lab-v01
+    paths-ignore:
+      - estoriq-creative-lab/review-preview.html
   workflow_dispatch:
+
 permissions:
-  contents: read
+  contents: write
+
 jobs:
   test-and-package:
     runs-on: ubuntu-latest
@@ -17,13 +21,22 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
         working-directory: estoriq-creative-lab
-      - name: Compile production bundle (test only)
+      - name: Compile production bundle for QA (not deployed)
         run: npm run build
         working-directory: estoriq-creative-lab
-      - name: Prepare self-contained offline QC file
+      - name: Prepare standalone QA HTML
         run: npm run qc:html
         working-directory: estoriq-creative-lab
-      - name: Upload QC preview and build (not deployed)
+      - name: Save preview on QC branch only (no deployment)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f estoriq-creative-lab/review-preview.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh QC HTML snapshot [skip ci]"
+            git push origin HEAD:refs/heads/prototype/estoriq-creative-lab-v01
+          fi
+      - name: Upload QC preview artifact
         uses: actions/upload-artifact@v4
         with:
           name: estoriq-prototype-qc

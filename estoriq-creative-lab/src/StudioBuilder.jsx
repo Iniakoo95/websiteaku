@@ -169,7 +169,7 @@ export default function StudioBuilder() {
       </div>
       <aside className="sc-right sc-pane">
         <div className="sc-pane-header"><b>PROPERTIES</b><span>↗</span></div>
-        <div className="sc-tabs">{[['design','Design'],['settings','Settings']].map(([id,label)=><button key={id} className={right===id?'active':''} onClick={()=>setRight(id)}>{label}</button>)}</div>
+        <div className="sc-tabs">{[['design','Design'],['settings','Settings']].map(([id,label])=><button key={id} className={right===id?'active':''} onClick={()=>setRight(id)}>{label}</button>)}</div>
         <div className="sc-property-scroll">
           <div className="sc-selected"><span>SELECTED LAYER</span><b>{activeName}</b>{selected&&<div><button onClick={duplicate}>⧉ Duplicate</button><button onClick={remove}>⌫ Delete</button></div>}</div>
           {right==='design'&&selected&&<div className="sc-quick">

@@ -1,7 +1,7 @@
 {
   "name": "estoriq-creative-lab-prototype",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -10,6 +10,7 @@
     "qc:html": "node scripts/create-review-html.mjs"
   },
   "dependencies": {
+    "@measured/puck": "^0.20.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

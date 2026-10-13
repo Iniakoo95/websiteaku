@@ -1,0 +1,38 @@
+name: Estoriq Visual Editor QC Build
+on:
+  push:
+    branches: [feature/estoriq-visual-editor]
+    paths-ignore:
+      - estoriq-creative-lab/review-preview.html
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+        working-directory: estoriq-creative-lab
+      - run: npm run build
+        working-directory: estoriq-creative-lab
+      - run: npm run qc:html
+        working-directory: estoriq-creative-lab
+      - name: Commit QC snapshot to prototype branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f estoriq-creative-lab/review-preview.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh visual editor owner QC file [skip ci]"
+            git push origin HEAD:refs/heads/feature/estoriq-visual-editor
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: estoriq-visual-editor-qc
+          path: |
+            estoriq-creative-lab/review-preview.html
+            estoriq-creative-lab/dist

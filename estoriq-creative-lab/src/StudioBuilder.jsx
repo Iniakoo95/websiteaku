@@ -34,8 +34,33 @@ function standaloneHTML(editor) {
 function download(name,content,mime='text/plain') {
   const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000)
 }
-function Field({label,value,onChange,type='text',min,max,step,disabled}) {
-  return <label className="es-field"><span>{label}</span><input type={type} min={min} max={max} step={step} disabled={disabled} value={value??''} onChange={e=>onChange(e.target.value)}/></label>
+function NumericControl({label, value, onChange, min=0, max=500, step=1, unit='px', allowNegative=false}) {
+  const raw=String(value??'').trim()
+  const matched=raw.match(/^(-?\\d+(?:\\.\\d+)?)(px|%|rem|em|vw|vh|deg)?$/i)
+  const [typed,setTyped]=useState(null)
+  useEffect(()=>setTyped(null),[raw])
+  const current=matched?Number(matched[1]):min
+  const display=typed===null?(matched?matched[1]:raw):typed
+  const suffix=matched?.[2]||unit
+  const lo=allowNegative?Math.min(min,-500):min
+  const slider=Math.max(lo,Math.min(max,current))
+  const emit=n=>{
+    if(n===''||n==='-'||n==='.') {setTyped(n);return}
+    if(!Number.isFinite(Number(n)))return
+    const number=Number(n)
+    setTyped(null)
+    onChange(suffix==='unitless'?String(number):String(number)+suffix)
+  }
+  return <div className="es-numeric">
+    <div className="es-numeric-head"><label>{label}</label><div className="es-numeric-input">
+      <input type="number" inputMode="decimal" value={display} step={step}
+        onChange={e=>emit(e.target.value)} aria-label={label+' exact value'} />
+      <span>{suffix==='unitless'?'—':suffix}</span>
+    </div></div>
+    <input type="range" min={lo} max={max} step={step} value={slider}
+      aria-label={label+' slider'} onChange={e=>emit(e.target.value)}/>
+    {!matched&&raw&&<small>Custom CSS: {raw} · drag slider to replace</small>}
+  </div>
 }
 
 export default function StudioBuilder() {
@@ -174,15 +199,18 @@ export default function StudioBuilder() {
           <div className="sc-selected"><span>SELECTED LAYER</span><b>{activeName}</b>{selected&&<div><button onClick={duplicate}>⧉ Duplicate</button><button onClick={remove}>⌫ Delete</button></div>}</div>
           {right==='design'&&selected&&<div className="sc-quick">
             <b>QUICK CONTROLS</b>
-            <div className="sc-field-grid">
-              <Field label="Width" value={selectedStyle.width||''} onChange={v=>changeStyle('width',v)} />
-              <Field label="Height" value={selectedStyle.height||''} onChange={v=>changeStyle('height',v)} />
-              <Field label="X / left" value={selectedStyle.left||''} onChange={v=>changeStyle('left',v)} />
-              <Field label="Y / top" value={selectedStyle.top||''} onChange={v=>changeStyle('top',v)} />
-              <Field label="Radius" value={selectedStyle['border-radius']||''} onChange={v=>changeStyle('border-radius',v)} />
-              <Field label="Rotate" value={selectedStyle.transform?.replace(/^rotate\((.*)\)$/,'$1')||''} onChange={v=>changeStyle('transform',v?`rotate(${v})`:'')} />
-              <Field label="Font size" value={selectedStyle['font-size']||''} onChange={v=>changeStyle('font-size',v)} />
-              <Field label="Opacity" value={selectedStyle.opacity||''} onChange={v=>changeStyle('opacity',v)} />
+            <div className="sc-numeric-list">
+              <NumericControl label="Width" value={selectedStyle.width} min={0} max={1600} onChange={v=>changeStyle('width',v)} />
+              <NumericControl label="Height" value={selectedStyle.height} min={0} max={1200} onChange={v=>changeStyle('height',v)} />
+              <NumericControl label="X / Left" value={selectedStyle.left} min={-500} max={1500} allowNegative onChange={v=>changeStyle('left',v)} />
+              <NumericControl label="Y / Top" value={selectedStyle.top} min={-500} max={1500} allowNegative onChange={v=>changeStyle('top',v)} />
+              <NumericControl label="Padding" value={selectedStyle.padding} max={200} onChange={v=>changeStyle('padding',v)} />
+              <NumericControl label="Margin" value={selectedStyle.margin} min={-200} max={200} allowNegative onChange={v=>changeStyle('margin',v)} />
+              <NumericControl label="Corner radius" value={selectedStyle['border-radius']} max={200} onChange={v=>changeStyle('border-radius',v)} />
+              <NumericControl label="Font size" value={selectedStyle['font-size']} max={180} onChange={v=>changeStyle('font-size',v)} />
+              <NumericControl label="Letter spacing" value={selectedStyle['letter-spacing']} min={-15} max={40} step={0.5} allowNegative onChange={v=>changeStyle('letter-spacing',v)} />
+              <NumericControl label="Opacity" value={selectedStyle.opacity??'1'} max={1} step={0.01} unit="unitless" onChange={v=>changeStyle('opacity',v)} />
+              <NumericControl label="Rotation" value={(selectedStyle.transform||'').match(/rotate\\((-?[\\d.]+)deg\\)/)?.[1]+'deg' || '0deg'} min={-180} max={180} allowNegative unit="deg" onChange={v=>changeStyle('transform',`rotate(${v})`)} />
             </div>
             <div className="sc-position-actions"><button onClick={()=>changeStyle('position','absolute')}>Free-position</button><button onClick={()=>{changeStyle('position','relative');changeStyle('left','auto');changeStyle('top','auto')}}>Responsive flow</button></div>
             <p>Free-position uses CSS absolute positioning. Use inside a relative Frame; mobile layouts may need adjustment.</p>

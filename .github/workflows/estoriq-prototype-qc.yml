@@ -1,0 +1,46 @@
+name: Estoriq prototype QC build
+on:
+  push:
+    branches:
+      - prototype/estoriq-creative-lab-v01
+    paths-ignore:
+      - estoriq-creative-lab/review-preview.html
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: estoriq-creative-lab
+      - name: Compile production bundle for QA (not deployed)
+        run: npm run build
+        working-directory: estoriq-creative-lab
+      - name: Prepare standalone QA HTML
+        run: npm run qc:html
+        working-directory: estoriq-creative-lab
+      - name: Save preview on QC branch only (no deployment)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f estoriq-creative-lab/review-preview.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh QC HTML snapshot [skip ci]"
+            git push origin HEAD:refs/heads/prototype/estoriq-creative-lab-v01
+          fi
+      - name: Upload QC preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estoriq-prototype-qc
+          path: |
+            estoriq-creative-lab/review-preview.html
+            estoriq-creative-lab/dist
+          if-no-files-found: error

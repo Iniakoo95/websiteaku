@@ -1,0 +1,47 @@
+name: Estoriq V0.2 QC build
+on:
+  push:
+    branches:
+      - prototype/estoriq-creative-lab-v02
+    paths-ignore:
+      - estoriq-creative-lab/review-preview.html
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+        working-directory: estoriq-creative-lab
+      - name: Compile React app (not deployed)
+        run: npm run build
+        working-directory: estoriq-creative-lab
+      - name: Generate and validate standalone QC HTML
+        run: npm run qc:html
+        working-directory: estoriq-creative-lab
+      - name: Validate wireframe structure
+        run: |
+          node -e "const fs=require('fs');const s=fs.readFileSync('estoriq-creative-lab/review-preview.html','utf8');for(const x of ['id=\\\"root\\\"','Products,','case study']){};if(!s.includes('id=\\\"root\\\"'))throw Error('Missing React mount');if((s.match(/<script\\b/g)||[]).length!==2)throw Error('Corrupt HTML scripts');console.log('QC file validated')"
+      - name: Save QC snapshot on prototype branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f estoriq-creative-lab/review-preview.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh V0.2 owner QC HTML [skip ci]"
+            git push origin HEAD:refs/heads/prototype/estoriq-creative-lab-v02
+          fi
+      - name: Upload owner QC artifact (no deployment)
+        uses: actions/upload-artifact@v4
+        with:
+          name: estoriq-v02-owner-qc
+          path: |
+            estoriq-creative-lab/review-preview.html
+            estoriq-creative-lab/dist
+          if-no-files-found: error

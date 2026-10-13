@@ -210,7 +210,7 @@ export default function StudioBuilder() {
               <NumericControl label="Font size" value={selectedStyle['font-size']} max={180} onChange={v=>changeStyle('font-size',v)} />
               <NumericControl label="Letter spacing" value={selectedStyle['letter-spacing']} min={-15} max={40} step={0.5} allowNegative onChange={v=>changeStyle('letter-spacing',v)} />
               <NumericControl label="Opacity" value={selectedStyle.opacity??'1'} max={1} step={0.01} unit="unitless" onChange={v=>changeStyle('opacity',v)} />
-              <NumericControl label="Rotation" value={(selectedStyle.transform||'').match(/rotate\\((-?[\\d.]+)deg\\)/)?.[1]+'deg' || '0deg'} min={-180} max={180} allowNegative unit="deg" onChange={v=>changeStyle('transform',`rotate(${v})`)} />
+              <NumericControl label="Rotation" value={((selectedStyle.transform||'').match(/rotate\((-?[\d.]+)deg\)/)?.[1] || '0')+'deg'} min={-180} max={180} allowNegative unit="deg" onChange={v=>changeStyle('transform',`rotate(${v})`)} />
             </div>
             <div className="sc-position-actions"><button onClick={()=>changeStyle('position','absolute')}>Free-position</button><button onClick={()=>{changeStyle('position','relative');changeStyle('left','auto');changeStyle('top','auto')}}>Responsive flow</button></div>
             <p>Free-position uses CSS absolute positioning. Use inside a relative Frame; mobile layouts may need adjustment.</p>

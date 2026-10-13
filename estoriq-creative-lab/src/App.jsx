@@ -33,12 +33,12 @@ const SERVICES = [
   { no: '03', title: 'Creative Direction', description: 'A clear visual point of view from the first frame through the final delivery.', tags: 'CONCEPT  /  DESIGN  /  DIRECTION' }
 ]
 
-function IconArrow({ size = 18, diagonal = false }) {
+export function IconArrow({ size = 18, diagonal = false }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d={diagonal ? 'M5 19 19 5M7 5h12v12' : 'M4 12h16m-7-7 7 7-7 7'} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
 }
 function IconCross() { return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.8"/></svg> }
 
-function ArtFrame({ kind = 'bottles', id = 'art', text = 'ARTWORK / PENDING APPROVAL' }) {
+export function ArtFrame({ kind = 'bottles', id = 'art', text = 'ARTWORK / PENDING APPROVAL' }) {
   const g = `g-${id}`
   const isProduct = kind === 'bottles' || kind === 'hero'
   return <div className={`art-frame visual-${kind}`}>

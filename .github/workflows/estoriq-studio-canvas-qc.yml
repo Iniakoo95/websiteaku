@@ -1,0 +1,54 @@
+name: Estoriq Studio Canvas QA (never deploy production)
+on:
+  push:
+    branches: [feature/estoriq-studio-canvas]
+    paths-ignore:
+      - 'estoriq-creative-lab/dist/**'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        working-directory: estoriq-creative-lab
+        run: npm install --no-audit --no-fund
+      - name: Build Vite + GrapesJS custom visual builder
+        working-directory: estoriq-creative-lab
+        run: npm run build
+      - name: Check exported artifact references
+        run: |
+          python - <<'PY'
+          import pathlib, re
+          root = pathlib.Path('estoriq-creative-lab/dist')
+          html = (root/'index.html').read_text()
+          assert (root/'assets').is_dir(), 'Compiled assets missing'
+          js = list((root/'assets').glob('*.js'))
+          css = list((root/'assets').glob('*.css'))
+          assert js and css, 'Missing script or stylesheet'
+          for ext in ('js', 'css'):
+            urls = re.findall(r'\./assets/[^"\']+\.' + ext, html)
+            assert urls, f'No {ext} URL in output HTML'
+            for url in urls: assert (root/url).is_file(), f'Missing asset: {url}'
+          print('Static build checks passed; browser interactions require QC.')
+          PY
+      - name: Commit static QC assets to feature branch ONLY
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f estoriq-creative-lab/dist
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update Estoriq Studio Canvas QC static bundle [skip ci]"
+            git push origin HEAD:refs/heads/feature/estoriq-studio-canvas
+          fi
+      - name: Upload downloadable QA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: estoriq-studio-canvas-qa
+          path: estoriq-creative-lab/dist
+          if-no-files-found: error
